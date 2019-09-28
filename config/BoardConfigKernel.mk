@@ -282,4 +282,26 @@ TOOLS_PATH_OVERRIDE := \
 
 endif # FULL_KERNEL_BUILD
 
-endif # TARGET_NO_KERNEL
+ifeq ($(BOARD_INCLUDE_DTB_IN_BOOTIMG),true)
+BOARD_PREBUILT_DTBIMAGE_DIR ?= $(PRODUCT_OUT)/dtbs/arch/$(KERNEL_ARCH)/boot/dts/**
+endif
+
+# Set use the full path to the make command
+KERNEL_MAKE_CMD := $(BUILD_TOP)/prebuilts/build-tools/$(HOST_OS)-x86/bin/make
+
+# Set the full path to the gcc command
+ifeq ($(HOST_OS),darwin)
+KERNEL_HOST_TOOLCHAIN_ROOT := $(GCC_PREBUILTS)/host/i686-apple-darwin-4.2.1/bin/i686-apple-darwin11-
+else
+KERNEL_HOST_TOOLCHAIN_ROOT := $(GCC_PREBUILTS)/host/x86_64-linux-glibc2.17-4.8/bin/x86_64-linux-
+endif
+KERNEL_MAKE_FLAGS += HOSTCC=$(KERNEL_HOST_TOOLCHAIN_ROOT)gcc
+KERNEL_MAKE_FLAGS += HOSTCXX=$(KERNEL_HOST_TOOLCHAIN_ROOT)g++
+
+# Set the out dir for the kernel's O= arg
+# This needs to be an absolute path, so only set this if the standard out dir isn't used
+OUT_DIR_PREFIX := $(shell echo $(OUT_DIR) | sed -e 's|/target/.*$$||g')
+KERNEL_BUILD_OUT_PREFIX :=
+ifeq ($(OUT_DIR_PREFIX),out)
+KERNEL_BUILD_OUT_PREFIX := $(BUILD_TOP)/
+endif
